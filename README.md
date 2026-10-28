@@ -1,0 +1,2 @@
+# Kinnisvara-databaas
+Tehingute analüüs
