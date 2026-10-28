@@ -13,6 +13,7 @@ import {
   Legend,
 } from 'chart.js';
 import { parseCsv, aggregate, SIZE_RANGES, TOTAL_KEY } from './data.js';
+import { createBubbleMap, radiusFor } from './map.js';
 
 Chart.register(
   BarController,
@@ -526,6 +527,104 @@ function renderCharts() {
   $('count-sub').textContent = `${isAll ? 'Kõik maakonnad' : state.county} · kokku ${fmtCount(countChart.$total)} tehingut`;
 }
 
+// ---------- Bubble map ----------
+
+let updateMap;
+
+// Transactions per county for the selected size range (size rows only, so hidden rows drop out)
+function countyCounts() {
+  return data.counties.map((county) => {
+    const rows = data.rows
+      .filter((r) => r.county === county && !r.isTotal && (state.size === 'all' || r.size === state.size))
+      .filter(keep);
+    const median = data.rows.find((r) => r.county === county && r.size === activeSizeKey())?.unitMedian ?? null;
+    return { county, count: rows.reduce((s, r) => s + r.count, 0), median };
+  });
+}
+
+// 1, 2 or 5 times a power of ten, not above v
+function niceFloor(v) {
+  const p = 10 ** Math.floor(Math.log10(v));
+  const f = v / p;
+  return (f >= 5 ? 5 : f >= 2 ? 2 : 1) * p;
+}
+
+function renderMapLegend(max) {
+  const legend = $('map-legend');
+  const values = [...new Set([niceFloor(max), niceFloor(max / 5), niceFloor(max / 40)])].filter((v) => v >= 1);
+  // Draw the legend at the same scale as the map, with text ~12px on screen
+  const mapSvg = $('map').querySelector('svg');
+  const scale = mapSvg?.getBoundingClientRect().width / 1000 || 1;
+  const font = 12 / scale;
+  const big = radiusFor(values[0], max);
+  const base = big * 2 + font / 2;
+  const textX = big * 2 + 18;
+  const width = textX + font * 4.5;
+  // Labels sit level with each circle's top, pushed apart when circles are close
+  let labelY = -Infinity;
+  legend.innerHTML = values
+    .map((v) => {
+      const r = radiusFor(v, max);
+      const top = base - 2 * r;
+      labelY = Math.max(top, labelY + font * 1.2);
+      return `<circle cx="${big + 2}" cy="${base - r}" r="${r}"></circle><line x1="${big + 2}" x2="${textX - 4}" y1="${top}" y2="${labelY}"></line><text x="${textX}" y="${labelY + font / 3}" style="font-size:${font}px">${nf0.format(v)}</text>`;
+    })
+    .join('');
+  const height = Math.max(base, labelY + font / 2) + 4;
+  legend.setAttribute('viewBox', `0 0 ${width} ${height}`);
+  legend.style.width = `${Math.round(width * scale)}px`;
+}
+
+function renderMap() {
+  const items = countyCounts();
+  const total = items.reduce((s, i) => s + i.count, 0);
+  const max = Math.max(1, ...items.map((i) => i.count));
+  updateMap.items = items;
+  updateMap.total = total;
+  updateMap(items, state.county, max);
+  renderMapLegend(max);
+
+  $('map-sub').textContent = `${sizeLabel(activeSizeKey())} · kokku ${fmtCount(total)} tehingut${
+    state.hideIncomplete ? ' · mittetäielikud read välja jäetud' : ''
+  }`;
+
+  const top = [...items].sort((a, b) => b.count - a.count).slice(0, 5);
+  $('map-top').innerHTML = top
+    .map((i) => {
+      const share = total ? (i.count / total) * 100 : 0;
+      return `<li><span>${escapeHtml(shortCounty(i.county))}</span><span><strong>${fmtCount(i.count)}</strong> <span class="share">${nf1.format(share)}%</span></span><span class="bar"><span style="width:${(i.count / max) * 100}%"></span></span></li>`;
+    })
+    .join('');
+}
+
+function initMap() {
+  updateMap = createBubbleMap($('map'), {
+    onSelect: (county) => {
+      hideTooltip();
+      state.county = state.county === county ? 'all' : county;
+      $('county-select').value = state.county;
+      render();
+    },
+    describe: (county) => {
+      const item = updateMap.items.find((i) => i.county === county);
+      const share = updateMap.total ? (item.count / updateMap.total) * 100 : 0;
+      return [
+        county,
+        `Tehinguid: ${fmtCount(item.count)} (${nf1.format(share)}% valikust)`,
+        `Mediaan: ${fmtUnit(item.median)}`,
+        sizeLabel(activeSizeKey()),
+      ].join('\n');
+    },
+    showTip: placeTooltip,
+    hideTip: hideTooltip,
+  });
+  let resizeTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(renderMap, 150);
+  });
+}
+
 // ---------- Table ----------
 
 const TABLE_COLUMNS = [
@@ -623,30 +722,38 @@ function initTableSort() {
 
 // ---------- Info tooltips ----------
 
-function initTooltips() {
+// Shows the shared tooltip above (or below) a rectangle, kept inside the viewport
+function placeTooltip(r, text) {
   const tip = $('tooltip');
+  tip.textContent = text;
+  tip.hidden = false;
+  const t = tip.getBoundingClientRect();
+  const margin = 16;
+  let left = r.left + r.width / 2 - t.width / 2;
+  left = Math.max(margin, Math.min(left, window.innerWidth - t.width - margin));
+  let top = r.top - t.height - 8;
+  if (top < margin) top = r.bottom + 8;
+  tip.style.left = `${left}px`;
+  tip.style.top = `${top}px`;
+}
+
+const hideTooltip = () => {
+  $('tooltip').hidden = true;
+};
+
+function initTooltips() {
   let current = null;
 
   const show = (btn) => {
     if (current && current !== btn) current.setAttribute('aria-expanded', 'false');
     current = btn;
     btn.setAttribute('aria-expanded', 'true');
-    tip.textContent = btn.dataset.tip;
-    tip.hidden = false;
-    const r = btn.getBoundingClientRect();
-    const t = tip.getBoundingClientRect();
-    const margin = 16;
-    let left = r.left + r.width / 2 - t.width / 2;
-    left = Math.max(margin, Math.min(left, window.innerWidth - t.width - margin));
-    let top = r.top - t.height - 8;
-    if (top < margin) top = r.bottom + 8;
-    tip.style.left = `${left}px`;
-    tip.style.top = `${top}px`;
+    placeTooltip(btn.getBoundingClientRect(), btn.dataset.tip);
   };
   const hide = () => {
     current?.setAttribute('aria-expanded', 'false');
     current = null;
-    tip.hidden = true;
+    hideTooltip();
   };
 
   document.addEventListener('mouseover', (e) => {
@@ -699,6 +806,7 @@ function render() {
   renderNotices();
   renderHighlights();
   renderKpis();
+  renderMap();
   renderCharts();
   renderTable();
 }
@@ -707,5 +815,6 @@ renderStatic();
 initFilters();
 initTooltips();
 initTableSort();
+initMap();
 createCharts();
 render();

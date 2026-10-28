@@ -401,6 +401,7 @@ main.container {
   border-radius: 10px;
   box-shadow: 0 8px 24px rgba(15, 27, 45, 0.2);
   pointer-events: none;
+  white-space: pre-line;
   animation: fade 0.15s ease-out;
 }
 
@@ -422,6 +423,181 @@ main.container {
 
 .chart-box-tall {
   height: 620px;
+}
+
+/* Bubble map */
+.map-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(200px, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.map-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.map-land {
+  fill: #eef3fa;
+  stroke: #c3d0e4;
+  stroke-width: 1.2;
+  stroke-linejoin: round;
+}
+
+.bubble {
+  cursor: pointer;
+  outline: none;
+}
+
+.bubble-hit {
+  fill: transparent;
+}
+
+.bubble-dot {
+  fill: rgba(42, 120, 214, 0.55);
+  stroke: #fff;
+  stroke-width: 2;
+  transition: r 0.45s cubic-bezier(0.2, 0.7, 0.3, 1), fill 0.2s, opacity 0.2s;
+}
+
+.bubble:hover .bubble-dot,
+.bubble:focus-visible .bubble-dot {
+  fill: rgba(29, 78, 216, 0.75);
+}
+
+.bubble:focus-visible .bubble-dot {
+  stroke: var(--accent-strong);
+  stroke-width: 3;
+}
+
+.bubble.is-selected .bubble-dot {
+  fill: #1d4ed8;
+}
+
+.bubble.is-dimmed .bubble-dot {
+  opacity: 0.45;
+}
+
+.bubble.is-empty .bubble-dot {
+  opacity: 0;
+}
+
+.bubble-name,
+.bubble-value {
+  text-anchor: middle;
+  pointer-events: none;
+  paint-order: stroke;
+  stroke: #fff;
+  stroke-width: 4px;
+  stroke-linejoin: round;
+  transition: transform 0.45s cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+
+.bubble-name {
+  font-size: 15px;
+  font-weight: 600;
+  fill: var(--text);
+}
+
+.bubble-value {
+  font-size: 14px;
+  fill: var(--text-secondary);
+}
+
+.bubble.label-inside .bubble-name,
+.bubble.label-inside .bubble-value {
+  fill: #fff;
+  stroke: none;
+}
+
+.bubble.label-inside .bubble-value {
+  font-weight: 600;
+}
+
+.bubble.label-inside:not(.is-selected) .bubble-name,
+.bubble.label-inside:not(.is-selected) .bubble-value {
+  fill: #0f2a5c;
+}
+
+.map-side {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.map-side-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.map-side-note {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+
+.map-legend {
+  display: block;
+  height: auto;
+  overflow: visible;
+}
+
+.map-legend circle {
+  fill: none;
+  stroke: #7fa6dc;
+  stroke-width: 1.5;
+}
+
+.map-legend line {
+  stroke: #c3d0e4;
+  stroke-dasharray: 3 3;
+}
+
+.map-legend text {
+  font-size: 12px;
+  fill: var(--text-secondary);
+}
+
+.map-top {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.map-top li {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px 8px;
+  font-size: 14px;
+}
+
+.map-top .share {
+  color: var(--text-muted);
+}
+
+.map-top .bar {
+  grid-column: 1 / -1;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--accent-soft);
+  overflow: hidden;
+}
+
+.map-top .bar span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+  transition: width 0.45s cubic-bezier(0.2, 0.7, 0.3, 1);
 }
 
 /* Table */
@@ -582,6 +758,10 @@ main.container {
 
   .chart-rank {
     grid-row: auto;
+  }
+
+  .map-layout {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .chart-box-tall {
