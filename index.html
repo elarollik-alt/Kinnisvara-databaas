@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="et">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Korteriomandite tehingute hinnad maakondade ja pindalavahemike lõikes" />
+    <title>Korterite hinnad maakonniti</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container">
+        <p class="eyebrow">Korteriomandite tehingud</p>
+        <h1>Korterite hinnad maakonniti</h1>
+        <p class="lede" id="period"></p>
+      </div>
+    </header>
+
+    <div class="filters-bar">
+      <form class="container filters" id="filters" aria-label="Filtrid">
+        <label class="field">
+          <span class="field-label">Maakond</span>
+          <select id="county-select"></select>
+        </label>
+        <label class="field">
+          <span class="field-label">Pindala</span>
+          <select id="size-select"></select>
+        </label>
+        <label class="checkbox">
+          <input type="checkbox" id="hide-incomplete" />
+          <span>Peida mittetäielikud read (***)</span>
+        </label>
+      </form>
+    </div>
+
+    <main class="container">
+      <div id="notices" class="notices" aria-live="polite"></div>
+
+      <section class="highlights" id="highlights" aria-label="Kalleim ja soodsaim maakond"></section>
+
+      <section class="panel" aria-labelledby="kpi-title">
+        <div class="panel-head">
+          <h2 id="kpi-title">Valiku näitajad</h2>
+          <p class="panel-sub" id="kpi-sub"></p>
+        </div>
+        <div class="kpis" id="kpis"></div>
+      </section>
+
+      <div class="charts">
+        <section class="panel chart-panel chart-rank" aria-labelledby="rank-title">
+          <div class="panel-head">
+            <h2 id="rank-title">Mediaanhind maakondade lõikes</h2>
+            <p class="panel-sub" id="rank-sub"></p>
+          </div>
+          <div class="chart-box chart-box-tall"><canvas id="rank-chart" role="img"></canvas></div>
+        </section>
+
+        <section class="panel chart-panel" aria-labelledby="size-title">
+          <div class="panel-head">
+            <h2 id="size-title">Ruutmeetri hind pindala järgi</h2>
+            <p class="panel-sub" id="size-sub"></p>
+          </div>
+          <div class="chart-box"><canvas id="size-chart" role="img"></canvas></div>
+        </section>
+
+        <section class="panel chart-panel" aria-labelledby="count-title">
+          <div class="panel-head">
+            <h2 id="count-title">Tehingute arv pindala järgi</h2>
+            <p class="panel-sub" id="count-sub"></p>
+          </div>
+          <div class="chart-box"><canvas id="count-chart" role="img"></canvas></div>
+        </section>
+      </div>
+
+      <section class="panel" aria-labelledby="table-title">
+        <div class="panel-head">
+          <h2 id="table-title">Detailandmed</h2>
+          <p class="panel-sub" id="table-sub"></p>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table" id="data-table">
+            <thead></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container" id="footer"></div>
+    </footer>
+
+    <div class="tooltip" id="tooltip" role="tooltip" hidden></div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

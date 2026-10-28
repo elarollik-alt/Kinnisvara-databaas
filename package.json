@@ -1,0 +1,19 @@
+{
+  "name": "kinnisvara-databaas",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Korteriomandite tehingute analüüs maakondade ja pindalavahemike lõikes",
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "chart.js": "4.4.7",
+    "vite": "5.4.21",
+    "vite-plugin-singlefile": "2.0.3"
+  }
+}
