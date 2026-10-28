@@ -1,0 +1,32 @@
+// Database: Render PostgreSQL, reached through the DATABASE_URL environment variable on Railway.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// One row of the Maa- ja Ruumiamet CSV: a county and size range (or the county total "KOKKU").
+// Price fields are null where the source hides them (***).
+model Transaction {
+  id         Int      @id @default(autoincrement())
+  county     String
+  sizeRange  String   @map("size_range")
+  count      Int
+  avgArea    Float?   @map("avg_area")
+  sumTotal   Float?   @map("sum_total")
+  sumMin     Float?   @map("sum_min")
+  sumMax     Float?   @map("sum_max")
+  unitMin    Float?   @map("unit_min")
+  unitMax    Float?   @map("unit_max")
+  unitMedian Float?   @map("unit_median")
+  unitMean   Float?   @map("unit_mean")
+  unitStd    Float?   @map("unit_std")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@unique([county, sizeRange])
+  @@map("transactions")
+}

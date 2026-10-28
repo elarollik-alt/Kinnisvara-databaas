@@ -31,6 +31,15 @@ function parseNumber(raw) {
   return Number.isFinite(n) ? n : null;
 }
 
+// Adds the derived flags to a row that has county, size and the metric fields
+export function finalizeRow(row) {
+  return {
+    ...row,
+    isTotal: row.size === TOTAL_KEY,
+    incomplete: FIELDS.some((f) => row[f] === null || row[f] === undefined),
+  };
+}
+
 export function parseCsv(text) {
   const lines = text.replace(/^﻿/, '').split(/\r?\n/);
   const headerIdx = lines.findIndex((l) => l.startsWith('Piirkond;'));
@@ -50,12 +59,11 @@ export function parseCsv(text) {
     const cells = line.split(';');
     if (cells[0].trim()) county = cells[0].trim();
     const size = cells[1].trim();
-    const row = { county, size, isTotal: size === TOTAL_KEY, incomplete: false };
+    const row = { county, size };
     FIELDS.forEach((field, idx) => {
       row[field] = parseNumber(cells[idx + 2]);
     });
-    row.incomplete = FIELDS.some((f) => row[f] === null);
-    rows.push(row);
+    rows.push(finalizeRow(row));
   }
 
   const notes = lines

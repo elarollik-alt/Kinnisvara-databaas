@@ -5,14 +5,16 @@
   "description": "Korteriomandite tehingute analüüs maakondade ja pindalavahemike lõikes",
   "type": "module",
   "scripts": {
-    "build": "vite build",
+    "build": "prisma generate && vite build",
     "start": "node server.js"
   },
   "engines": {
     "node": ">=20"
   },
   "dependencies": {
+    "@prisma/client": "6.19.3",
     "chart.js": "4.4.7",
+    "prisma": "6.19.3",
     "vite": "5.4.21",
     "vite-plugin-singlefile": "2.0.3"
   }

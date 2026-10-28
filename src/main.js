@@ -12,7 +12,7 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
-import { parseCsv, aggregate, SIZE_RANGES, TOTAL_KEY } from './data.js';
+import { parseCsv, aggregate, finalizeRow, SIZE_RANGES, TOTAL_KEY } from './data.js';
 import { createBubbleMap, radiusFor } from './map.js';
 
 Chart.register(
@@ -797,7 +797,32 @@ function renderStatic() {
     data.source ? `<p>Allikas: ${escapeHtml(data.source)}</p>` : '',
     ...data.notes.map((n) => `<p>${escapeHtml(n)}</p>`),
     '<p>*** – allikas ei avalda selle rea summasid ja hindu.</p>',
+    '<p id="data-source">Andmed: CSV-fail</p>',
   ].join('');
+}
+
+// Swaps in the rows from the server's database; the embedded CSV stays as fallback
+async function loadFromDatabase() {
+  if (location.protocol === 'file:') return;
+  try {
+    const res = await fetch('/api/transactions', { headers: { Accept: 'application/json' } });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const { rows } = await res.json();
+    if (!rows?.length) throw new Error('andmebaas on tühi');
+    data.rows = rows.map(finalizeRow);
+    data.counties = [...new Set(data.rows.map((r) => r.county))];
+    const countySelect = $('county-select');
+    const selected = countySelect.value;
+    countySelect.innerHTML =
+      `<option value="all">Kõik maakonnad</option>` +
+      data.counties.map((c) => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+    countySelect.value = data.counties.includes(selected) ? selected : 'all';
+    state.county = countySelect.value;
+    $('data-source').textContent = 'Andmed: PostgreSQL andmebaas';
+    render();
+  } catch (err) {
+    console.warn('Andmebaasi andmed pole kättesaadavad, kasutan CSV-faili:', err);
+  }
 }
 
 // ---------- Render ----------
@@ -818,3 +843,4 @@ initTableSort();
 initMap();
 createCharts();
 render();
+loadFromDatabase();
