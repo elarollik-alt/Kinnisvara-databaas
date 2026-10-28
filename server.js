@@ -1,4 +1,4 @@
-// Production server for Railway: serves the single-file build from dist/ and,
+// Production server for Render: serves the single-file build from dist/ and,
 // when DATABASE_URL is set, the transaction rows from the Render PostgreSQL database.
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';

@@ -1,4 +1,4 @@
-// Database: Render PostgreSQL, reached through the DATABASE_URL environment variable on Railway.
+// Database: Render PostgreSQL, reached through the DATABASE_URL environment variable on the Render Web Service.
 
 generator client {
   provider = "prisma-client-js"
